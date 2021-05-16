@@ -3,7 +3,7 @@
 <html>
 
 <head>
-	<title>Sprint Reader</title>
+	<title>[E] Sprint Reader</title>
 	
 	<!-- Link to jQuery library -->
 	<script src="../lib/jquery/jquery.min.js"></script>
@@ -30,17 +30,6 @@
 </head>
 
 <body>
-	<div class="social"> 
-	    <div class="github">
-			<a href="https://github.com/anthonynosek/sprint-reader-chrome" target="_blank"><img class="svg github_logo" src="graphics/github-mark-16px.svg"></a>
-        </div>
-    	<div class="google">
-			<div class="g-follow" data-href="https://plus.google.com/u/0/b/105075625257906831241" data-rel="author"></div>
-        </div>
-        <div class="facebook">
-        	<iframe src="https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2FSprintReader&amp;width&amp;layout=button_count&amp;action=like&amp;show_faces=false&amp;share=false&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; height:21px; width:100px; margin-top:10px" allowTransparency="true"></iframe>
-        </div>
-   	</div>
 	
 	<div class="tabbable">
 		<div class="tab-content">
@@ -81,9 +70,18 @@
 					<div id="word-container"></canvas>  
 	                  	<div id="focal-guide" class="top"></div>
 						<!-- The span ensures the text is centered vertically -->
-						<span><h1 id="word"></h1></span>
+						<span style="min-width: 20px;">
+                            <h1 id="word"></h1>
+                            <!-- TODO: Configurable opacity -->
+                        </span>
                         <div id="focal-guide" class="bottom"></div>
 					</div>
+                    <div style="white-space: nowrap; overflow: hidden;">
+                        <h1
+                            id="trailing-words"
+                            style="float: left;display: table;color: black;opacity: 0.3;padding-left: 10px;">
+                        </h1>
+                    </div>
                     <canvas id="word-canvas" width="0" height="0"></canvas>
 					
                     <div id="sentence_outer"><div id="sentence_inner">
@@ -205,7 +203,7 @@
                                             <span class="input-group-addon">
                                                 <input id="autostart" name="autostart" type="checkbox">
                                             </span>
-                                            <input id="autostartseconds" type="number" class="form-control" placeholder="2">
+                                            <input id="autostartseconds" step=".1" type="number" class="form-control" placeholder="2">
                                         </div>   
                                         <div class="input-group">
                                             <label class="checkbox_plain" for="autoclosereader" id="autoclosereaderlabel">
@@ -354,7 +352,7 @@
 					<div class="input-column-left">
 						<h3>Shortcut Keys</h3>
 						<p>
-							<ol>- Open reader window | <b>CTRL+SHIFT+Z</b><br>
+							<ol>- Open reader window | <b>CTRL+SHIFT+R</b><br>
 								- Toggle play/pause | <b>SPACE</b><br>
                                 - WPM step decrease/increase | <b>Z / X</b><br>
 								- Step back/forward | <b>A / S</b><br>
@@ -367,22 +365,6 @@
 						</p>
 						<div id="spacer"></div>
                   	</div>
-                    <div class="input-column-right">
-                    	<h3>So how do I sprint read?</h3>
-                        <p>
-                            <ol><b>Method 1 (The easy way)</b>
-                                <li>Highlight text on a webpage</li>
-                                <li>Right click</li>
-                                <li>Select "<b>Sprint read selected text</b>"</li>
-                            </ol>
-                            <div id="spacer"></div>
-                            <ol><b>Method 2 (to enable: advanced options)</b>
-                                <li>Press <b>CONTROL+ALT</b> (auto-select mode)</li>
-                                <li>Move mouse to highlight text</li>
-                                <li>Press <b>Z</b> to open reader</li>
-                            </ol>
-                        </p>
-                    </div>
              	</div>
 			</div>
 		</div>

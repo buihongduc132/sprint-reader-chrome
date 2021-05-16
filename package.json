@@ -1,0 +1,22 @@
+{
+  "name": "sprint-reader-chrome",
+  "version": "1.0.0",
+  "main": "electron.js",
+  "repository": "git@github.com:buihongduc132/sprint-reader-chrome.git",
+  "author": "Duc Bui <buihongduc132@yahoo.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon --watch \"*.js\" --watch \"*.html\" --exec electron .",
+    "rebuild": "npm rebuild --runtime=electron --target=1.1.3 --disturl=https://atom.io/download/atom-shell --abi=48"
+  },
+  "dependencies": {
+    "electron": "^12.0.7",
+    "electron-store": "^8.0.0",
+    "robotjs": "^0.6.0"
+  },
+  "devDependencies": {
+    "electron-build": "^0.0.3",
+    "electron-rebuild": "^2.3.5"
+  }
+}

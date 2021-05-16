@@ -122,7 +122,8 @@ var WPMTimingAdjustmentMS = 0;
 // Return the text array for the passed in algorithm
 // Algorithms are explained in more detail above each
 // algorithm function. Refer to these for more information
-function getTextArray(algorithm, selectedText, chunkSize) {
+function getTextArray(algorithm, selectedText, chunkSize, options = {}) {
+
 	var tArray;
 	switch(algorithm)
 	{
@@ -971,7 +972,8 @@ function playSlideShow() {
 			var p = Math.round((wordIndex / textArray.length) * 100);
 			setProgress(p);		
 			// Display the word
-			displayWord(textArray[wordIndex]);			
+			displayWord(textArray[wordIndex]);	
+			displayTrailingWords(wordIndex, 6);
 			// Increment to post-delay (this slide)
 			if (wordIndex < textArray.length) {
 				textItemIndex = 2;
@@ -1008,8 +1010,11 @@ function playSlideShow() {
 		// Progress the wordIndex because we are at the end of the slide
 		wordIndex = wordIndex + 1;
 		// If we are at the end of the text selection
-		// the window can be autoclosed if we are at the end
-		if (autoCloseReader == 'true') doWeAutoCloseReader();
+		// the window can be autoclosed if we are at the end/
+
+		if (autoCloseReader == 'true') {
+			hideWindow();
+		}
 	}
 
 	// Determine if we stop the recursive loop
@@ -1034,15 +1039,14 @@ function displayBlankWord() {
 	var orient = 'left';
 	if (displayReaderRightToLeft) orient = 'right';
 	
-	$( "#word-container").css('padding-left', "0px");
-	$( "#word-container").css('padding-right', "0px");
-	$( "#word-container").css('margin-left', "0");
-	$( "#word-container").css('margin-right', "0");
+	// $( "#word-container").css('padding-left', "0px");
+	// $( "#word-container").css('padding-right', "0px");
+	// $( "#word-container").css('margin-left', "0");
+	// $( "#word-container").css('margin-right', "0");
 		
 	// Optimal positioning + static focal
 	// If the user has selected a static focal we should
 	// display the static focal on the slide
-	if (textPosition == 3) {
 		divWord.innerHTML = focalCharacter;
 		
 		var dummyTextItem = {};
@@ -1054,13 +1058,26 @@ function displayBlankWord() {
 
 		$( "#word-container").css('padding-' + orient, offset + "px");
 		$( "#word-container").css('margin-' + orient, "0");
+
+	// if (textPosition == 3) {
+	// 	divWord.innerHTML = focalCharacter;
 		
-		highlightTheOptimalLetter(dummyTextItem);
-	}
-	else {
-		$( "#word-container").css('margin-left', "auto");	
-		$( "#word-container").css('margin-right', "auto");
-	}
+	// 	var dummyTextItem = {};
+	// 	dummyTextItem.text = focalCharacter;
+	// 	dummyTextItem.optimalletterposition = 1;
+		
+	// 	var px = calculatePixelOffsetToOptimalCenter(dummyTextItem);
+	// 	var offset = leftPaddingBorderOptimised - px;
+
+	// 	$( "#word-container").css('padding-' + orient, offset + "px");
+	// 	$( "#word-container").css('margin-' + orient, "0");
+		
+	// 	highlightTheOptimalLetter(dummyTextItem);
+	// }
+	// else {
+	// 	$( "#word-container").css('margin-left', "auto");	
+	// 	$( "#word-container").css('margin-right', "auto");
+	// }
 }
 
 // This function will display the word on the display
@@ -1083,6 +1100,20 @@ function displayWord(textItem) {
 	//    - Optimal positioning
 	//	  - Optimal positioning + static focal
 	setWordLeftPadding(textItem);
+}
+
+function displayTrailingWords(wordIndex, numberOfWords) {
+	const nextWords = [];
+	for (let i = 0; i < numberOfWords; i++) {
+		if(textArray[i + wordIndex + 1]) {
+			nextWords.push(textArray[i + wordIndex + 1]);
+		}
+	}
+	
+	// 1. Display the trailing words
+	divTrailingWords.innerHTML = htmlEntitiesDecode(
+		nextWords.map(({ text }) => text).join(' '),
+	);
 }
 
 // --------------------------------------------------

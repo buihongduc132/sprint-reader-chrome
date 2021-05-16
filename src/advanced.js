@@ -29,6 +29,11 @@ function setEventListeners() {
 		// Advanced settings buttons	
 		var divSaveMoreAdvanced = document.getElementById('btnSaveMoreAdvanced');
 		divSaveMoreAdvanced.addEventListener("click", saveMoreAdvancedSettings, false);
+
+		var divCloseMoreAdvanced = document.getElementById('btnCloseMoreAdvanced');
+		divCloseMoreAdvanced.addEventListener("click", () => {
+			this.close();
+		}, false);
 		
 		var divMoreAdvancedDefaults = document.getElementById('btnRestoreMoreAdvancedDefaults');
 		divMoreAdvancedDefaults.addEventListener("click", restoreMoreAdvancedSettings, false);
@@ -204,13 +209,6 @@ function saveMoreAdvancedSettings() {
 	
 	var NEWmadvSaveSlidePosition = document.getElementById('saveslideposition').checked;
 	localStorage.setItem("madvSaveSlidePosition", NEWmadvSaveSlidePosition);
-	
-	// Close the advanced settings tab
-	//chrome.tabs.getCurrent(function(tab) {
-	//	chrome.tabs.remove(tab.id, function() { });
-	//});
-	
-	alert('Please restart Sprint Reader for these changes to take effect');
 }
 
 function restoreMoreAdvancedSettings() {

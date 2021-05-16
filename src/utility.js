@@ -1,3 +1,5 @@
+
+
 //------------------------------------------------------------------------------
 //
 // 	SPRINT READER
@@ -109,7 +111,7 @@ function getMoreAdvancedSettingsDefaults() {
 	madvRemoveLastSlideNullOrEmpty = 'true';
 	madvEnableHyphenatedWordSplit = 'true';
 	madvConsolidateHyphenatedWord = 'true';
-	madvEnableLongWordHyphenation = 'true';
+	madvEnableLongWordHyphenation = 'false';
 	madvLongWordTriggerCharacterCount = 13;
 	madvLongWordMinCharacterPerSlidePostSplit = 6;
 	madvLongWordCharacterTriggerDoNotJoin = 4;
@@ -145,9 +147,10 @@ function getMoreAdvancedSettingsDefaults() {
 
 // Obtain the version number of the chrome extension and display
 function displayVersion() {
-	var version = chrome.app.getDetails().version;
-	var divVersion = document.getElementById('version');
-	divVersion.innerHTML = "<br><b>Sprint Reader</b> (v" + version + ")";
+	return;
+	// var version = chrome.app.getDetails().version;
+	// var divVersion = document.getElementById('version');
+	// divVersion.innerHTML = "<br><b>Sprint Reader</b> (v" + version + ")";
 }
 
 // Get an item from local storage, ensure the item is greater then zero
@@ -174,7 +177,7 @@ function getFromLocalNotEmpty(key, variable) {
 function getFromLocalIsNumber(key, variable) {
 	if (!isEmpty(localStorage.getItem(key)) && !isNaN(localStorage.getItem(key))) {
 		variable = localStorage.getItem(key);
-		variable = parseInt(variable);
+		variable = parseFloat(variable);
 	}
 	return variable;
 }
@@ -571,7 +574,7 @@ function getSelectedTextFromResourceString(textFromResource) {
 
 // --------------------------------------------------
 // Shuffle the text history items as the reader is closed
-function saveSelectedTextToResource(latestTextSelection) {
+var saveSelectedTextToResource = (latestTextSelection) => {
 	if (latestTextSelection == null) latestTextSelection = "";
 	
 	// Don't save duplicate text selections... why would we do this???

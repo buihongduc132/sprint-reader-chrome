@@ -192,7 +192,7 @@ label {
 }
 
 #controls button {
-	float: left;
+	float: right;
 	margin-top: 8px;
 	margin-right: 10px;
 	width: 100px;
