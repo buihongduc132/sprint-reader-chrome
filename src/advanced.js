@@ -7,6 +7,14 @@
 //
 //------------------------------------------------------------------------------
 
+const qs = window.require('qs');
+
+var CONST_CONFIG_TYPES = {
+	'madvTextReplacer': {
+		type: 'json'
+	}
+};
+
 // Have listeners been assigned?
 var listenersExist;
 
@@ -29,6 +37,9 @@ function setEventListeners() {
 		// Advanced settings buttons	
 		var divSaveMoreAdvanced = document.getElementById('btnSaveMoreAdvanced');
 		divSaveMoreAdvanced.addEventListener("click", saveMoreAdvancedSettings, false);
+
+		var divSaveMoreAdvancedJson = document.getElementById('btnSaveMoreAdvancedJson');
+		divSaveMoreAdvancedJson.addEventListener("click", saveMoreAdvancedJsonSettings, false);
 
 		var divCloseMoreAdvanced = document.getElementById('btnCloseMoreAdvanced');
 		divCloseMoreAdvanced.addEventListener("click", () => {
@@ -55,6 +66,26 @@ function setEventListeners() {
 		
 		listenersExist = true;
 	}
+}
+
+function saveMoreAdvancedJsonSettings() {
+	const jsonEditorValue = editor.get();
+	Object.entries(jsonEditorValue).forEach(([key, _value]) => {
+		const jsonKeyType = CONST_CONFIG_TYPES[key];
+		let value = _value;
+
+		if (jsonKeyType && jsonKeyType.type === 'json') {
+			try {
+				value = qs.stringify(_value);
+			} catch(err) {
+				console.error('Parse json error', { err, key, _value });
+				value = '';
+			}
+			console.log('value', { value, key, _value });
+		}
+
+		localStorage.setItem(key, value);
+	});
 }
 
 function saveMoreAdvancedSettings() {

@@ -6,10 +6,14 @@
 //	https://github.com/anthonynosek/sprint-reader-chrome/blob/master/LICENSE
 //
 //------------------------------------------------------------------------------
+
+const qs = window.require('qs');
+
 // User settings
 var WPM;
 var font;
 var fontSize;
+var trailingFontSizePercentage;
 var chunkSize;
 var autoStart;
 var playingText;
@@ -125,11 +129,10 @@ var WPMTimingAdjustmentMS = 0;
 function getTextArray(algorithm, selectedText, chunkSize, options = {}) {
 
 	var tArray;
-	switch(algorithm)
-	{
+	switch (algorithm) {
 		case 1:
 			selectedAlgorithmName = "word length";
-	  		tArray = getTextArrayWordLength(selectedText, chunkSize);
+			tArray = getTextArrayWordLength(selectedText, chunkSize);
 			getTextArrayWordLengthTiming(tArray);
 			break;
 		case 2:
@@ -139,10 +142,10 @@ function getTextArray(algorithm, selectedText, chunkSize, options = {}) {
 			break;
 		default:
 			selectedAlgorithmName = "basic";
-	  		tArray = getTextArrayBasic(selectedText, chunkSize);
+			tArray = getTextArrayBasic(selectedText, chunkSize);
 			getTextArrayBasicTiming(tArray);
 	}
-	
+
 	totalWords = tArray.length;
 	displayStatistics(tArray);
 	return tArray;
@@ -151,8 +154,7 @@ function getTextArray(algorithm, selectedText, chunkSize, options = {}) {
 // Process the timings for the textArray based on the 
 // passed in display algorithm
 function getTextArrayTiming(algorithm, textData) {
-	switch(algorithm)
-	{
+	switch (algorithm) {
 		case 1:
 			getTextArrayWordLengthTiming(textData);
 			break;
@@ -161,7 +163,7 @@ function getTextArrayTiming(algorithm, textData) {
 		default:
 			getTextArrayBasicTiming(textData);
 	}
-	
+
 	displayStatistics(textData);
 }
 
@@ -174,7 +176,7 @@ function getTextArrayTiming(algorithm, textData) {
 // First pass at the selected text
 // Returns a first pass array
 function splitTextToArray_FirstPass(selectedText) {
-	
+
 	// Text is split in a series of steps and rules
 	//
 	// STEP 1 -	Add a space character after a seperator character (.,?!:;) that doesn't already have a space.
@@ -186,9 +188,9 @@ function splitTextToArray_FirstPass(selectedText) {
 	//			3. Acronyms
 	//			4. Numbered lists
 	//			5. Numbers displayed with decimal places
-	
+
 	splitTextFirstPass = new Array();
-			
+
 	// --------------------------------------------------------------------
 	// STEP 1
 	// 04/03/2014 Anthony Nosek
@@ -201,24 +203,24 @@ function splitTextToArray_FirstPass(selectedText) {
 		selectedText = selectedText.replace(/([.,?!:;])(?! )/g, '$1 ');
 	}
 	spacedText = htmlEntitiesEncode(selectedText);
-	
+
 	// --------------------------------------------------------------------
 	// STEP 2
 	// Split the selected text by single space character
 	//console.log(spacedText);	
 	var splitText = spacedText.match(/\S+/g);
-		
+
 	// --------------------------------------------------------------------
 	// STEP 3
 	// Remove the last array element if it's blank
 	var totalWords = splitText.length;
 	if (madvRemoveLastSlideNullOrEmpty == 'true') {
 		totalWords = splitText.length;
-		if (totalWords > 0 & splitText[totalWords-1] == "") {
-			splitText.splice(totalWords-1, 1);
+		if (totalWords > 0 & splitText[totalWords - 1] == "") {
+			splitText.splice(totalWords - 1, 1);
 		}
 	}
-	
+
 	// --------------------------------------------------------------------
 	// STEP 4
 	// Make corrections for:
@@ -228,8 +230,8 @@ function splitTextToArray_FirstPass(selectedText) {
 	// 	4. Numbered lists
 	// 	5. Numbers displayed with decimal places
 	indexGlobal = 0;
-	splitTextToArray_FirstPass_CleanupLoop(indexGlobal, splitText);	
-	
+	splitTextToArray_FirstPass_CleanupLoop(indexGlobal, splitText);
+
 	// Safety Checks
 	//console.log(selectedText);
 	//console.log(splitText);
@@ -240,16 +242,16 @@ function splitTextToArray_FirstPass(selectedText) {
 // Loops through the initial split text array for processing
 function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 	// Loop through the array from point i (index)
-	for (var i=index, count = splitText.length; i < count; i++) {	
+	for (var i = index, count = splitText.length; i < count; i++) {
 		// Increment the global index
 		indexGlobal = i;
-		
+
 		// The text from the slide
-		var textItemFirst = {};		
+		var textItemFirst = {};
 		textItemFirst.slidenumber = i + 1;
 		textItemFirst.text = splitText[i];
 		textItemFirst.childofprevious = false;
-		textItemFirst.textoriginal = splitText[i];		
+		textItemFirst.textoriginal = splitText[i];
 
 		var textOnSlide = textItemFirst.text;
 
@@ -266,7 +268,7 @@ function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 				else {
 					// We have detected a hyphen exists before an end of line character
 					var lastCharacter = textOnSlide.indexOf("\n");
-					if (lastCharacter !== -1 && textOnSlide[textOnSlide.length-1] == "-") {
+					if (lastCharacter !== -1 && textOnSlide[textOnSlide.length - 1] == "-") {
 						if (madvConsolidateHyphenatedWord == 'true') {
 							// The last character on the slide is a new line
 							// If the word is small enough let's just put the 
@@ -275,7 +277,7 @@ function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 							var result = joinHyphenatedWord(i, splitText);
 							if (result) {
 								// Re-analyse the slide
-								i=i-1;
+								i = i - 1;
 								continue;
 							}
 						}
@@ -288,52 +290,52 @@ function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 					}
 				}
 			}
-			
+
 			// --------------------------------------------------------
 			// LONG WORDS
 			// We split long words so they're easier to read
-			if (madvEnableLongWordHyphenation == 'true') {	
-				var textDecoded = htmlEntitiesDecode(textOnSlide);		
+			if (madvEnableLongWordHyphenation == 'true') {
+				var textDecoded = htmlEntitiesDecode(textOnSlide);
 				if (textDecoded.length > madvLongWordTriggerCharacterCount) {
 					// Split the word using hyphenate and language pattern
 					var splitFirst = $().hyphenateWord(textOnSlide, language.pattern, madvLongWordTriggerCharacterCount);
-					var splitWord = adjustStringArray(splitFirst, madvLongWordMinCharacterPerSlidePostSplit, madvLongWordTriggerCharacterCount);					
+					var splitWord = adjustStringArray(splitFirst, madvLongWordMinCharacterPerSlidePostSplit, madvLongWordTriggerCharacterCount);
 					//console.log(splitFirst);
 					//console.log(splitWord);
-					
-					for (var x=0; x<splitWord.length; x++) {
+
+					for (var x = 0; x < splitWord.length; x++) {
 						var tempText = {};
 						tempText.childofprevious = false;
 						tempText.slidenumber = textItemFirst.slidenumber;
-						tempText.textoriginal = textItemFirst.textoriginal;	
-						if (x == splitWord.length-1) {
+						tempText.textoriginal = textItemFirst.textoriginal;
+						if (x == splitWord.length - 1) {
 							// We are at the last character of the split
 							var lastTextSegment = splitWord[x];
 							if (lastTextSegment.length <= madvLongWordCharacterTriggerDoNotJoin) {
-								var lastWord = splitTextFirstPass[splitTextFirstPass.length-1].text;
-								splitTextFirstPass[splitTextFirstPass.length-1].text = lastWord.substring(0, lastWord.length-1) + lastTextSegment;
+								var lastWord = splitTextFirstPass[splitTextFirstPass.length - 1].text;
+								splitTextFirstPass[splitTextFirstPass.length - 1].text = lastWord.substring(0, lastWord.length - 1) + lastTextSegment;
 							}
 							else {
 								tempText.childofprevious = true;
 								tempText.text = splitWord[x];
 								splitTextFirstPass.push(tempText);
 							}
-						} 
-						else if (x==0){
+						}
+						else if (x == 0) {
 							tempText.text = splitWord[x] + '-';
-							splitTextFirstPass.push(tempText);					
+							splitTextFirstPass.push(tempText);
 						}
 						else {
 							tempText.childofprevious = true;
 							tempText.text = splitWord[x] + '-';
-							splitTextFirstPass.push(tempText);		
+							splitTextFirstPass.push(tempText);
 						}
 					}
 					continue;
 				}
 			}
 		}
-		
+
 		// --------------------------------------------------------
 		// ACRONYM
 		// Test for an acronym
@@ -352,11 +354,11 @@ function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 					textItemFirst.textoriginal = exText;
 					splitTextFirstPass.push(textItemFirst);
 					i = indexGlobal;
-					continue;			
+					continue;
 				}
 			}
 		}
-		
+
 		// --------------------------------------------------------
 		// NUMBERED LIST
 		// A numbered list such as:
@@ -366,7 +368,7 @@ function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 		//	1. This --> next slide
 		//	2. This --> next slide
 		// We look for a new line and then a number and period		
-		
+
 		// --------------------------------------------------------
 		// NUMBERS AND DECIMALS
 		// Clean up for numbers with decimals
@@ -384,7 +386,7 @@ function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 				continue;
 			}
 		}
-		
+
 		// --------------------------------------------------------
 		// PUSH THE REMAINDER TO THE ARRAY STACK
 		// Add the text to the array
@@ -397,22 +399,22 @@ function splitTextToArray_FirstPass_CleanupLoop(index, splitText) {
 // string array contained within the pased in parameters
 function adjustStringArray(stringArray, minCharCountPerItem, maxItemLength) {
 	var clean = new Array();
-	for (var i=0; i<stringArray.length; i++) {
+	for (var i = 0; i < stringArray.length; i++) {
 		var text = stringArray[i];
 		var cleanedText = text;
-		if (text.length < minCharCountPerItem && i < stringArray.length) {	
+		if (text.length < minCharCountPerItem && i < stringArray.length) {
 			var nextText = "";
-			if (typeof(stringArray[i+1]) != 'undefined') nextText = stringArray[i+1];		
-			cleanedText = cleanedText + nextText;			
+			if (typeof (stringArray[i + 1]) != 'undefined') nextText = stringArray[i + 1];
+			cleanedText = cleanedText + nextText;
 			if (cleanedText.length > maxItemLength) {
 				clean.push(text);
 				continue;
-			}			
+			}
 			clean.push(cleanedText);
 			i = i + 1;
 			continue;
-		}		
-		else {			
+		}
+		else {
 			clean.push(cleanedText);
 		}
 	}
@@ -423,8 +425,8 @@ function adjustStringArray(stringArray, minCharCountPerItem, maxItemLength) {
 // Will check for a hyphen to join word
 function joinHyphenatedWord(index, splitText) {
 	// We have a slide that has a new line at the end
-	if (index+1 < splitText.length) {
-		var nextWord = splitLength[index+1];
+	if (index + 1 < splitText.length) {
+		var nextWord = splitLength[index + 1];
 		if (nextWord.indexOf("-") == -1) {
 			exText = exText.replace("-/n", nextWord);
 		}
@@ -440,61 +442,61 @@ function splitHyphenatedWord(index, splitText, textItemFirst) {
 	var text = splitText[index];
 	chrRegEx = /[a-z]/i;
 
-	var splitHyphenated = text.split("-").reduce(function(result, current) {
+	var splitHyphenated = text.split("-").reduce(function (result, current) {
 		var previous = result[result.length - 1];
 		if (!previous) {
 			return result.concat(current);
 		}
-	
+
 		// Testing for non-numeric 
-		if (chrRegEx.test(previous[previous.length-1])) { // && chrRegEx.test(current[0])){
+		if (chrRegEx.test(previous[previous.length - 1])) { // && chrRegEx.test(current[0])){
 			result = result.concat(current);
 		} else {
 			result[result.length - 1] += "-" + current;
 		}
-	
+
 		return result;
 	}, []);
-	
+
 	// Add the split word to the main text array, adding the hyphen back
 	if (splitHyphenated.length > 0) {
-		for (var i=0, count = splitHyphenated.length; i < count; i++) {	
+		for (var i = 0, count = splitHyphenated.length; i < count; i++) {
 			var tempText = {};
 			tempText.childofprevious = false;
 			if (i > 0) tempText.childofprevious = true;
 			tempText.slidenumber = textItemFirst.slidenumber;
-			tempText.textoriginal = textItemFirst.textoriginal;	
+			tempText.textoriginal = textItemFirst.textoriginal;
 			// We make adjustments in case the word is hyphenated with only two parts
 			// We test for length and put them back together, i.e. co-founder
-			if (i==0 && splitHyphenated.length == 2) {
+			if (i == 0 && splitHyphenated.length == 2) {
 				var combinedLength = splitHyphenated[0].length + splitHyphenated[1].length;
 				if (combinedLength <= 12) {
 					tempText.text = splitHyphenated[0] + "-" + splitHyphenated[1];
 					splitTextFirstPass.push(tempText);
 					break;
 				}
-			}			
+			}
 			// Add the text item to the final array
-			if (i == splitHyphenated.length-1) {
-				tempText.text =splitHyphenated[i];
+			if (i == splitHyphenated.length - 1) {
+				tempText.text = splitHyphenated[i];
 				splitTextFirstPass.push(tempText);
 			}
 			else {
 				tempText.text = splitHyphenated[i] + "-";
-				splitTextFirstPass.push(tempText);	
+				splitTextFirstPass.push(tempText);
 			}
 		}
 	}
-	
+
 	indexGlobal = index;
-	index = index+1;		
+	index = index + 1;
 }
 
 // --------------------------------------------------
 // Will check recursively for an acronym
 function recursiveCheckForAcronym(index, splitText) {
 	indexGlobal = index;
-	index = index+1;
+	index = index + 1;
 	if (index < splitText.length) {
 		text = splitText[index];
 		//console.log(text);
@@ -506,10 +508,10 @@ function recursiveCheckForAcronym(index, splitText) {
 			// The slide is a single character that is not an I or A
 			// This will more than likely be the final character of an acronym
 			var containsAbbStartingCharacter = text[0].match('/A|I/i');
-			if (containsAbbStartingCharacter == null) {	
-				exText = exText + text;	
+			if (containsAbbStartingCharacter == null) {
+				exText = exText + text;
 				indexGlobal = index;
-				index = index+1;
+				index = index + 1;
 			}
 		}
 	}
@@ -519,7 +521,7 @@ function recursiveCheckForAcronym(index, splitText) {
 // Will check recursively for a number
 function recursiveCheckForNumber(index, splitText) {
 	indexGlobal = index;
-	index = index+1;	
+	index = index + 1;
 	if (index < splitText.length) {
 		text = splitText[index];
 		// Is the first letter of the next word a number?
@@ -534,7 +536,7 @@ function recursiveCheckForNumber(index, splitText) {
 // Second pass at the selected text
 // Returns a second pass array
 function splitTextToArray_SecondPass() {
-	
+
 	// Text is split in a series of steps and rules
 	//
 	// STEP 1 -	Cycle through the array and do not add any slides that have zero text.
@@ -542,14 +544,14 @@ function splitTextToArray_SecondPass() {
 	//			the pre-post and main slide. If the slide is not displaying text then
 	//			we can omit it from the final array.
 	//			Also, html encode each slide to ensure all characters are displayed
-	
+
 	splitTextSecondPass = new Array();
-			
+
 	// --------------------------------------------------------------------
 	// STEP 1
 	indexGlobal = 0;
 	splitTextToArray_SecondPass_CleanupLoop(indexGlobal, splitTextFirstPass);
-	
+
 	// Safety Checks
 	//console.log(splitTextFirstPass);
 	//console.log(splitTextSecondPass);
@@ -559,23 +561,23 @@ function splitTextToArray_SecondPass() {
 // Loops through the initial split text array for processing
 function splitTextToArray_SecondPass_CleanupLoop(index, splitText) {
 	// Loop through the array from point i (index)
-	for (var i=index, count = splitText.length; i < count; i++) {	
+	for (var i = index, count = splitText.length; i < count; i++) {
 		// Increment the global index
 		indexGlobal = i;
-		
+
 		// Assign text to variables
 		var text = splitText[i].text;
 		var textOriginal = splitText[i].textoriginal;
-		
+
 		// Check for 
-		
+
 		// The text from the slide
-		var textItemSecond = {};		
+		var textItemSecond = {};
 		textItemSecond.slidenumber = i + 1;
 		textItemSecond.text = text;
 		textItemSecond.textoriginal = textOriginal;
 		textItemSecond.childofprevious = splitText[i].childofprevious;
-		
+
 		// The text from the slide
 		var textOnSlide = splitText[i].text;
 
@@ -583,11 +585,11 @@ function splitTextToArray_SecondPass_CleanupLoop(index, splitText) {
 		// EMPTY SLIDES
 		if (madvDeleteEmptySlides == 'true') {
 			if (textOnSlide) {
-				splitTextSecondPass.push(textItemSecond);	
-			}			
-		} 
+				splitTextSecondPass.push(textItemSecond);
+			}
+		}
 		else splitTextSecondPass.push(textItemSecond);
-	}	
+	}
 }
 
 // --------------------------------------------------
@@ -601,8 +603,8 @@ function splitTextToArray_SecondPass_CleanupLoop(index, splitText) {
 //		&apos; 	→ ' (apostrophe, U+0027)
 function fixSpacingsForHTMLEncodedCharacters() {
 	// loop through the slides
-	for (var i=index, count = splitText.length; i < count; i++) {	
-	
+	for (var i = index, count = splitText.length; i < count; i++) {
+
 	}
 }
 
@@ -612,16 +614,16 @@ function addCommaPauseAfterCharacter(character, text, textItem, splitTextArray) 
 	var indexCharacter = text.lastIndexOf(character);
 	if (indexCharacter !== -1) {
 		// We have the character at the end
-		if (indexCharacter == text.length-1) {
+		if (indexCharacter == text.length - 1) {
 			if (pauseAfterComma == 'true') textItem.postdelay = pauseAfterCommaDelay;
 			return true;
 		}
 		// We have the character at the start
 		else if (indexCharacter == 0) {
-			splitTextArray[splitTextArray.length-1].text = splitTextArray[splitTextArray.length-1].text + ",";
-			text = text.slice(1, text.length-1);
-			if (pauseAfterComma == 'true') { splitTextArray[splitTextArray.length-1].postdelay = pauseAfterCommaDelay;	}
-		}					
+			splitTextArray[splitTextArray.length - 1].text = splitTextArray[splitTextArray.length - 1].text + ",";
+			text = text.slice(1, text.length - 1);
+			if (pauseAfterComma == 'true') { splitTextArray[splitTextArray.length - 1].postdelay = pauseAfterCommaDelay; }
+		}
 	}
 	return false;
 }
@@ -629,18 +631,18 @@ function addCommaPauseAfterCharacter(character, text, textItem, splitTextArray) 
 // --------------------------------------------------
 // Add a period pause after character
 function addPeriodPauseAfterCharacter(character, text, textItem, splitTextArray) {
-	var indexCharacter = text.lastIndexOf(character);			
+	var indexCharacter = text.lastIndexOf(character);
 	if (indexCharacter) {
 		// We have the character at the end
-		if (indexCharacter == text.length-1) {
+		if (indexCharacter == text.length - 1) {
 			if (pauseAfterPeriod == 'true') textItem.postdelay = pauseAfterPeriodDelay;
 			return true;
 		}
 		// We have the character at the start
 		else if (indexCharacter == 0) {
-			splitTextArray[splitTextArray.length-1].text = splitTextArray[splitTextArray.length-1].text + '.';
-			text = text.slice(1, text.length-1);
-			if (pauseAfterPeriod == 'true') { splitTextArray[splitTextArray.length-1].postdelay = pauseAfterPeriodDelay;	}
+			splitTextArray[splitTextArray.length - 1].text = splitTextArray[splitTextArray.length - 1].text + '.';
+			text = text.slice(1, text.length - 1);
+			if (pauseAfterPeriod == 'true') { splitTextArray[splitTextArray.length - 1].postdelay = pauseAfterPeriodDelay; }
 		}
 	}
 	return false;
@@ -652,7 +654,7 @@ function addParagraphPauseAfterCharacter(character, text, textItem, splitTextArr
 	var indexCharacter = text.indexOf(character);
 	if (indexCharacter !== -1) {
 		// We have the character at the end
-		if (indexCharacter == text.length-1) {						
+		if (indexCharacter == text.length - 1) {
 			if (pauseAfterParagraph == 'true') {
 				textItem.postdelay = pauseAfterParagraphDelay;
 				return true;
@@ -660,10 +662,10 @@ function addParagraphPauseAfterCharacter(character, text, textItem, splitTextArr
 		}
 		// We have the character at the start
 		else if (indexCharacter == 0) {
-			if (pauseAfterParagraph == 'true') { splitTextArray[splitTextArray.length-1].postdelay = pauseAfterParagraphDelay;	}
+			if (pauseAfterParagraph == 'true') { splitTextArray[splitTextArray.length - 1].postdelay = pauseAfterParagraphDelay; }
 		}
 		text = text.trim(character);
-	}	
+	}
 	return false;
 }
 
@@ -677,41 +679,67 @@ function addParagraphPauseAfterCharacter(character, text, textItem, splitTextArr
 // This function will add required delays after comma
 // period and paragraphs if specified by the user
 function getTextArrayBasic(selectedText, chunkSize) {
-
 	// An array to store the final display of text items
 	var splitTextArray = new Array();
 	var slideNumber = 1;
+	const replacer = localStorage.getItem('madvTextReplacer') || '';
+	let replacerObj;
+	try {
+		replacerObj = qs.parse(replacer);
+	} catch(err) {
+		console.error('Parse replacer fail', err, replacer);
+	}
+
+	if (replacerObj) {
+		try {
+			Object.values(replacerObj)
+				.forEach((replaceToConfig) => {
+					const {
+						replaceFrom,
+						replaceBy,
+						flags = '',
+					} = replaceToConfig;
+
+					selectedText = selectedText.replace(
+						new RegExp(replaceFrom, (flags || '') + 'g'),
+						replaceBy,
+					)
+				})
+		} catch (err) {
+			console.error('Get replacer error', err);
+		}
+	}
 
 	// Use this to test the splitting algorithm
 	// Assign test text to the variable below
 	//selectedText = "this-is-hyphenated text - this isn't another-hyphenated-word-1.20";
 
 	splitTextToArray_FirstPass(selectedText);
-	splitTextToArray_SecondPass();	
+	splitTextToArray_SecondPass();
 	var splitText = splitTextSecondPass;
-	
+
 	var wordsInChunk;
-	for (var i=0; i < splitText.length; i++) {		
-		var textItem = {};		
-		textItem.text = "";	
-		textItem.textoriginal = "";		
+	for (var i = 0; i < splitText.length; i++) {
+		var textItem = {};
+		textItem.text = "";
+		textItem.textoriginal = "";
 		textItem.wpm = WPM;
 		textItem.predelay = 0;
 		textItem.postdelay = 0;
 		textItem.slidenumber = 0;
 		textItem.wordsinslide = 0;
-		textItem.totalwords = totalWords;	
+		textItem.totalwords = totalWords;
 		textItem.hasbeenreversed = false;
-		textItem.childofprevious = false;	
-		textItem.hyphenatedfrompreviousslide = false;		
-				
-		for (var j=0; j<chunkSize; j++) {
-			if (i+j < splitText.length) {
-				
-				wordsInChunk = j+1;
-				var text = splitText[i+j].text;
+		textItem.childofprevious = false;
+		textItem.hyphenatedfrompreviousslide = false;
+
+		for (var j = 0; j < chunkSize; j++) {
+			if (i + j < splitText.length) {
+
+				wordsInChunk = j + 1;
+				var text = splitText[i + j].text;
 				textItem.text = textItem.text + text + " ";
-				
+
 				// "" This is a character which looks like no character.
 				// As we have done a split of the selected text based on the space character we can
 				// assume that this is a new paragraph.
@@ -721,38 +749,38 @@ function getTextArrayBasic(selectedText, chunkSize) {
 						break;
 					}
 				}
-				
+
 				// Check the last character of the word
 				// If a comma, period or paragraph this signifies the start of
 				// a new chunk. In this manner comma, sentences and paragraphs are
 				// concluded with a pause if the user requests.
-				
+
 				// --------------------------
 				// COMMA
 				var comma = addCommaPauseAfterCharacter(',', text, textItem, splitTextArray);
 				if (comma) break;
-				
+
 				// SEMI-COLON
 				var semi = addCommaPauseAfterCharacter(';', text, textItem, splitTextArray);
 				if (semi) break;
-				
+
 				// COLON
 				var colon = addCommaPauseAfterCharacter(':', text, textItem, splitTextArray);
 				if (colon) break;
-				
+
 				// --------------------------
 				// PERIOD (Period .)
 				var period = addPeriodPauseAfterCharacter('.', text, textItem, splitTextArray);
 				if (period) break;
-				
+
 				// QUESTION MARK (Period ?)
 				var question = addPeriodPauseAfterCharacter('?', text, textItem, splitTextArray);
 				if (question) break;
-				
+
 				// APOSTROPHE (Period !)
 				var apostrophe = addPeriodPauseAfterCharacter('!', text, textItem, splitTextArray);
 				if (apostrophe) break;
-				
+
 				// --------------------------
 				// PARAGRAPH
 				var paragraph = addParagraphPauseAfterCharacter("\r\n", text, textItem, splitTextArray);
@@ -760,17 +788,17 @@ function getTextArrayBasic(selectedText, chunkSize) {
 
 				// NEW LINE
 				var newLine = addParagraphPauseAfterCharacter("\n", text, textItem, splitTextArray);
-				if (newLine) break;													
+				if (newLine) break;
 			}
 		}
 
 		textItem.wordsinslide = wordsInChunk;
 		textItem.text = $.trim(textItem.text);
-				
+
 		textItem.textforinfo = splitText[i].textoriginal;
-		textItem.textoriginal = splitText[i].textoriginal;	
-		textItem.childofprevious = splitText[i].childofprevious;		
-				
+		textItem.textoriginal = splitText[i].textoriginal;
+		textItem.childofprevious = splitText[i].childofprevious;
+
 		if (textItem.childofprevious) textItem.slidenumber = slideNumber - 1;
 		else {
 			textItem.slidenumber = slideNumber;
@@ -780,29 +808,29 @@ function getTextArrayBasic(selectedText, chunkSize) {
 		// -------------------------------------
 		// Assign the optimal letter position
 		textItem.optimalletterposition = assignOptimalLetterPosition(textItem);
-				
+
 		// Add a static focal if required
 		if (textPosition == 3) addStaticFocalToTextItem(textItem, false);
-		
+
 		// Assign the optimal pixel offset
 		textItem.pixeloffsettooptimalletter = calculatePixelOffsetToOptimalCenter(textItem);
 
 		// Enable this to get a log of the textItem
 		//console.log("text: " + textItem.text + " (" + textItem.predelay + ", " + textItem.postdelay + ") OLP: " + textItem.optimalletterposition);
 		//console.log(textItem.text);
-		
+
 		// Add the text item to the text array
-		splitTextArray.push(textItem);		
-		
+		splitTextArray.push(textItem);
+
 		i = i + wordsInChunk - 1;
 	}
-	
+
 	// Remove the final post-delay on the final slide as this will result in a blank screen
 	if (splitTextArray.length > 0) {
-		var slide = splitTextArray[splitTextArray.length-1];
+		var slide = splitTextArray[splitTextArray.length - 1];
 		slide.postdelay = 0;
 	}
-		
+
 	return splitTextArray;
 }
 
@@ -811,18 +839,18 @@ function getTextArrayBasic(selectedText, chunkSize) {
 function getTextArrayBasicTiming(textData) {
 	// Bail if we don't have a textArray
 	if (textData == null || textData.length <= 0) return;
-	
+
 	// Set the timing based on the WPM
 	// Basic algoritm all text items have
 	// the same timing based on the following
 	var duration = 1 / (WPM / 60) * 1000;
-	
+
 	for (var i = 0; i < textData.length; i++) {
 		var t = textData[i];
 		var wordsinslide = t.wordsinslide;
-    	t.duration = duration * wordsinslide;		
+		t.duration = duration * wordsinslide;
 		// Ensure we observe the minimum slide duration setting
-		if (t.duration < madvBasicMinimumSlideDuration) t.duration = madvBasicMinimumSlideDuration;		
+		if (t.duration < madvBasicMinimumSlideDuration) t.duration = madvBasicMinimumSlideDuration;
 		// Enable this to get a log of the textItem
 		//console.log("text: " + t.text + " (" + t.predelay + ", " + t.duration + ", " + t.postdelay + ") words: " + t.wordsinslide);
 	}
@@ -845,28 +873,28 @@ function getTextArrayWordLength(selectedText, chunkSize) {
 function getTextArrayWordLengthTiming(textData) {
 	// Bail if we don't have a textArray
 	if (textData == null || textData.length <= 0) return;
-	
+
 	// Timing is based on the WPM setting and the length of the word
 	var totalSegments = textData.length;
-	
+
 	// Calculate the approx duration of the text display in ms
 	var totalDuration = (totalSegments / WPM) * 60000;
-	
+
 	// Get the total length of the text
 	var totalLength = 0;
 	for (var i = 0; i < textData.length; i++) {
-    	totalLength = totalLength + textData[i].text.length;
+		totalLength = totalLength + textData[i].text.length;
 	}
-	
+
 	// Calculate the perLetter time
 	var unitTime = totalDuration / totalLength;
 
 	// Set the individual timing based on the length of the word
 	for (var i = 0; i < textData.length; i++) {
 		var t = textData[i];
-    	t.duration = unitTime * t.text.length;
+		t.duration = unitTime * t.text.length;
 		// Ensure we observe the minimum slide duration setting
-		if (t.duration < madvWordLengthMinimumSlideDuration) t.duration = madvWordLengthMinimumSlideDuration;	
+		if (t.duration < madvWordLengthMinimumSlideDuration) t.duration = madvWordLengthMinimumSlideDuration;
 		// Enable this to get a log of the textItem
 		//console.log("text: " + textData[i].text + " (" + textData[i].predelay + ", " + textData[i].duration + ", " + textData[i].postdelay + ")");
 	}
@@ -921,27 +949,27 @@ function getTextArrayWordFreq(selectedText, chunkSize) {
 function getTextArrayWordFreqTiming(textData) {
 	// Bail if we don't have a textArray
 	if (textData == null || textData.length <= 0) return;
-	
+
 	// Set the individual timing based on the Shannon information content of the word
 	for (var i = 0; i < textData.length; i++) {
 		var t = textData[i];
 		bitsOfInformation = -Math.log2(wordProbability[t.text]); // the Shannon information content definition
-		
+
 		// linear interpolation: 4.5 bits -> durShort msec, 25.6 bits -> durLong msec
 		var lowInfo = 4.5; var highInfo = 25.6; // this numbers are empirical and are taken from the en-US database.	
-		var durShort = madvWordFreqHighestFreqSlideDuration; 
+		var durShort = madvWordFreqHighestFreqSlideDuration;
 		var durLong = madvWordFreqLowestFreqSlideDuration;
-		
-		var a = (durLong - durShort)/(highInfo - lowInfo);
-		var b = durShort - lowInfo*a;
-		
+
+		var a = (durLong - durShort) / (highInfo - lowInfo);
+		var b = durShort - lowInfo * a;
+
 		if (!bitsOfInformation) bitsOfInformation = highInfo; // the maximum
-		
+
 		t.duration = a * bitsOfInformation + b; // Linear interpolation. Note: this means WPM setting has no role in this algorithm.
-		
+
 		// Ensure we observe the minimum slide duration setting
 		if (t.duration < madvWordFreqMinimumSlideDuration) t.duration = madvWordFreqMinimumSlideDuration;
-		
+
 		// Enable this to get a log of the textItem
 		//console.log("text: " + textData[i].text + " (" + textData[i].predelay + ", " + textData[i].duration + ", " + textData[i].postdelay + ")");
 	}
@@ -955,10 +983,10 @@ function playSlideShow() {
 	playingText = true;
 
 	// TEXT SLIDE
-	if (textItemIndex == 1) {			
+	if (textItemIndex == 1) {
 		// Determine where we are in the textArray
 		// and print, stop, reset accordingly
-		if (wordIndex >= textArray.length) {			
+		if (wordIndex >= textArray.length) {
 			divPlay.innerHTML = strRestart;
 			document.getElementById('menuPlayPause').innerHTML = strPlay + " (SPACE)";
 			stopSlideShow = true;
@@ -970,17 +998,17 @@ function playSlideShow() {
 			showSlideTime = Math.max(1, textArray[wordIndex].duration + WPMTimingAdjustmentMS);
 			// Set the progress
 			var p = Math.round((wordIndex / textArray.length) * 100);
-			setProgress(p);		
+			setProgress(p);
 			// Display the word
-			displayWord(textArray[wordIndex]);	
+			displayWord(textArray[wordIndex]);
 			displayTrailingWords(wordIndex, 6);
 			// Increment to post-delay (this slide)
 			if (wordIndex < textArray.length) {
 				textItemIndex = 2;
 			}
-		}		
+		}
 	}
-	
+
 	// PRE DELAY SLIDE
 	// Display blank word for predelay (if timing requires)
 	else if (textItemIndex == 0) {
@@ -990,18 +1018,18 @@ function playSlideShow() {
 			playSlideShow();
 			return;
 		}
-		showSlideTime = textArray[wordIndex].predelay;		
+		showSlideTime = textArray[wordIndex].predelay;
 		if (showSlideTime > 0) {
 			displayBlankWord();
 		}
 		// Increment to slide text
 		textItemIndex = 1;
 	}
-		
+
 	// POST DELAY SLIDE
 	// Display blank word for postdelay (if timing requires)
 	else if (textItemIndex == 2) {
-		showSlideTime = textArray[wordIndex].postdelay;		
+		showSlideTime = textArray[wordIndex].postdelay;
 		if (showSlideTime > 0) {
 			displayBlankWord();
 		}
@@ -1018,16 +1046,16 @@ function playSlideShow() {
 	}
 
 	// Determine if we stop the recursive loop
-    if (!stopSlideShow) {
+	if (!stopSlideShow) {
 		//console.log("Slide delay: " + showSlideTime + " - textItemIndex: " + textItemIndex-1);
 		if (wordFlicker == 'true') {
-			{ setTimeout(function() { displayBlankWord(); }, showSlideTime * (100 - wordFlickerPercent) / 100); }
+			{ setTimeout(function () { displayBlankWord(); }, showSlideTime * (100 - wordFlickerPercent) / 100); }
 		}
-    	{ setTimeout(function() { playSlideShow() }, showSlideTime); }
+		{ setTimeout(function () { playSlideShow() }, showSlideTime); }
 	}
 	else {
 		//console.log("stop command received");
-		playingText = false;	
+		playingText = false;
 	}
 }
 
@@ -1035,43 +1063,43 @@ function playSlideShow() {
 // This function will display a blank word on the display
 function displayBlankWord() {
 	divWord.innerHTML = " ";
-	
+
 	var orient = 'left';
 	if (displayReaderRightToLeft) orient = 'right';
-	
+
 	// $( "#word-container").css('padding-left', "0px");
 	// $( "#word-container").css('padding-right', "0px");
 	// $( "#word-container").css('margin-left', "0");
 	// $( "#word-container").css('margin-right', "0");
-		
+
 	// Optimal positioning + static focal
 	// If the user has selected a static focal we should
 	// display the static focal on the slide
-		divWord.innerHTML = focalCharacter;
-		
-		var dummyTextItem = {};
-		dummyTextItem.text = focalCharacter;
-		dummyTextItem.optimalletterposition = 1;
-		
-		var px = calculatePixelOffsetToOptimalCenter(dummyTextItem);
-		var offset = leftPaddingBorderOptimised - px;
+	divWord.innerHTML = focalCharacter;
 
-		$( "#word-container").css('padding-' + orient, offset + "px");
-		$( "#word-container").css('margin-' + orient, "0");
+	var dummyTextItem = {};
+	dummyTextItem.text = focalCharacter;
+	dummyTextItem.optimalletterposition = 1;
+
+	var px = calculatePixelOffsetToOptimalCenter(dummyTextItem);
+	var offset = leftPaddingBorderOptimised - px;
+
+	$("#word-container").css('padding-' + orient, offset + "px");
+	$("#word-container").css('margin-' + orient, "0");
 
 	// if (textPosition == 3) {
 	// 	divWord.innerHTML = focalCharacter;
-		
+
 	// 	var dummyTextItem = {};
 	// 	dummyTextItem.text = focalCharacter;
 	// 	dummyTextItem.optimalletterposition = 1;
-		
+
 	// 	var px = calculatePixelOffsetToOptimalCenter(dummyTextItem);
 	// 	var offset = leftPaddingBorderOptimised - px;
 
 	// 	$( "#word-container").css('padding-' + orient, offset + "px");
 	// 	$( "#word-container").css('margin-' + orient, "0");
-		
+
 	// 	highlightTheOptimalLetter(dummyTextItem);
 	// }
 	// else {
@@ -1081,21 +1109,25 @@ function displayBlankWord() {
 }
 
 // This function will display the word on the display
-function displayWord(textItem) {	
-	
+function displayWord(textItem) {
+	if (!textItem || !textItem.text) {
+		console.log('No text');
+		return;
+	}
+
 	// Reverse the number section if applicable
 	doWeReverseSlide(textItem);
-		
+
 	// 1. Display the word
 	divWord.innerHTML = htmlEntitiesDecode(textItem.text);
-	
+
 	// 2. Abort conditions
 	// 	  Do not do any extra processing
 	if (textItem.text.length == 0) return;
 
 	// 3. Letter highlighting
 	highlightTheOptimalLetter(textItem);
-	
+
 	// 4. Optimal positioning
 	//    - Optimal positioning
 	//	  - Optimal positioning + static focal
@@ -1105,11 +1137,11 @@ function displayWord(textItem) {
 function displayTrailingWords(wordIndex, numberOfWords) {
 	const nextWords = [];
 	for (let i = 0; i < numberOfWords; i++) {
-		if(textArray[i + wordIndex + 1]) {
+		if (textArray[i + wordIndex + 1]) {
 			nextWords.push(textArray[i + wordIndex + 1]);
 		}
 	}
-	
+
 	// 1. Display the trailing words
 	divTrailingWords.innerHTML = htmlEntitiesDecode(
 		nextWords.map(({ text }) => text).join(' '),
@@ -1119,35 +1151,41 @@ function displayTrailingWords(wordIndex, numberOfWords) {
 // --------------------------------------------------
 // Align the word left-padding
 function setWordLeftPadding(textItem) {
-	
+	if (!textItem || !textItem.text) {
+		console.log('setWordLeftPadding: No text');
+		return;
+	}
+
 	var orient = 'left';
 	if (displayReaderRightToLeft) orient = 'right';
-	
-	$( "#word-container").css('padding-left', "0px");
-	$( "#word-container").css('padding-right', "0px");
-	$( "#word-container").css('margin-left', "0");
-	$( "#word-container").css('margin-right', "0");
-		
-	if (textPosition == 2 || textPosition == 3) {		
+
+	$("#word-container").css('padding-left', "0px");
+	$("#word-container").css('padding-right', "0px");
+	$("#word-container").css('margin-left', "0");
+	$("#word-container").css('margin-right', "0");
+
+	if (textPosition == 2 || textPosition == 3) {
 		// The pixel offset from the left edge is provided
 		// in the textItem property pixeloffsettooptimalletter
 		var px = textItem.pixeloffsettooptimalletter;
 		if (textItem.pixeloffsettooptimalletter <= 0) {
-			px = calculatePixelOffsetToOptimalCenter(textItem);			
+			px = calculatePixelOffsetToOptimalCenter(textItem);
 		}
 		var offset = leftPaddingBorderOptimised - px;
-		$( "#word-container").css('padding-' + orient, offset + "px");
-		$( "#word-container").css('margin-' + orient, "0");
+		$("#word-container").css('padding-' + orient, offset + "px");
+		$("#word-container").css('margin-' + orient, "0");
 	}
 	else {
-		$( "#word-container").css('margin-left', "auto");
-		$( "#word-container").css('margin-right', "auto");
+		$("#word-container").css('margin-left', "auto");
+		$("#word-container").css('margin-right', "auto");
 	}
 }
 
 // --------------------------------------------------
 // Do we reverse the slide because it contains a number
 function doWeReverseSlide(textItem) {
+	if (!textItem || textItem.hasbeenreversed === undefined) return;
+
 	// If the slide has already been processed do not repeat
 	if (textItem.hasbeenreversed) return;
 	// Always return false if the text is left-to-right
@@ -1156,16 +1194,16 @@ function doWeReverseSlide(textItem) {
 	// Does the slide contain at least one character
 	var hasNumbers = /\d/.test(textItem.textoriginal);
 	if (!hasNumbers) return;
-	
+
 	//  Contains a number whereby we need to reverse a segment
 	//	This RegEx looks for numbers with decimals, currencies, percentages
-	var result = textItem.textoriginal.replace(/\$?[0-9]+(\.[0-9]+\,[0-9]+)?%?/g, function(s) { 
-		return reverseString(s); 
+	var result = textItem.textoriginal.replace(/\$?[0-9]+(\.[0-9]+\,[0-9]+)?%?/g, function (s) {
+		return reverseString(s);
 	})
-	
+
 	// Assign the reversed string
 	textItem.text = result;
-	
+
 	// Flag the slide as processed
 	textItem.hasbeenreversed = true;
 
@@ -1174,15 +1212,15 @@ function doWeReverseSlide(textItem) {
 
 	// For the optimal plus static focal positioning model
 	// we need to add the static focal character to the slide
-	
+
 	//console.log('original text ' + textItem.textoriginal);
 	//console.log('processed text ' + textItem.text);
-	
+
 	// Optimal positioning and static focal
 	if (textPosition == 3) {
-		addStaticFocalToTextItem(textItem, true);		
+		addStaticFocalToTextItem(textItem, true);
 	}
-	
+
 	// Set the pixel offset for the slide
 	textItem.pixeloffsettooptimalletter = calculatePixelOffsetToOptimalCenter(textItem, true);
 }
@@ -1203,20 +1241,20 @@ function highlightTheOptimalLetter(textItem) {
 		$("#word").lettering();
 		$("[class^=char]").attr('id', 'letterChar');
 	}
-	
+
 	// Letter highlighting is only applied when chunking
 	// a single word per slide and the option is set
-	if (highlightOptimalLetter == 'true' && chunkSize == 1) {			
+	if (highlightOptimalLetter == 'true' && chunkSize == 1) {
 		// Adjust the optimal letter for text direction
 		var letterPosition = textItem.optimalletterposition;
 		if (textItem.hasbeenreversed) {
-			var newPosition = textItem.optimalletterposition - 1;	
+			var newPosition = textItem.optimalletterposition - 1;
 			if (newPosition >= 1) letterPosition = newPosition;
 		}
 		// Colour the Nth letter of the word		
 		var charClass = ".char" + letterPosition;
 		$(charClass).css('color', highlightOptimalLetterColour);
-	}	
+	}
 }
 
 // --------------------------------------------------
@@ -1235,7 +1273,7 @@ function assignOptimalLetterPosition(textItem) {
 	else if (length >= 1 && length <= 4) position = 2;
 	else if (length >= 5 && length <= 9) position = 3;
 	else position = 4;
-		
+
 	return position;
 }
 
@@ -1245,59 +1283,59 @@ function assignOptimalLetterPosition(textItem) {
 function calculatePixelOffsetToOptimalCenter(textItem, isRightToLeft) {
 	var ftUsed = font;
 	var ftSize = fontSize;
-	
+
 	var canvas = document.getElementById('word-canvas');
-   	var context = canvas.getContext('2d');
+	var context = canvas.getContext('2d');
 	context.font = ftSize + "px " + ftUsed;
-	
-	var index = textItem.optimalletterposition-1;
+
+	var index = textItem.optimalletterposition - 1;
 	var wordToOptimalStart = "";
 	var wordOptimalLetter = "";
 	var text = textItem.text;
 	var length = textItem.text.length;
-	
+
 	if (length > 0) {
 		if (index >= 0) {
 			if (isRightToLeft) {
-				wordToOptimalStart = textItem.text.substring(0, index-1);
+				wordToOptimalStart = textItem.text.substring(0, index - 1);
 			}
 			else {
 				wordToOptimalStart = textItem.text.substring(0, index);
 			}
 		}
-		
+
 		if (textItem.text.length == 1) {
 			wordOptimalLetter = textItem.text;
 		}
 		else {
 			if (isRightToLeft) {
-				wordOptimalLetter = textItem.text.substring(index,index-1);
+				wordOptimalLetter = textItem.text.substring(index, index - 1);
 			}
 			else {
-				wordOptimalLetter = textItem.text.substring(index,index+1);
+				wordOptimalLetter = textItem.text.substring(index, index + 1);
 			}
 		}
 	}
 
 	var pxToOptimalStart = context.measureText(wordToOptimalStart).width;
 	var pxOptimalLetter = context.measureText(wordOptimalLetter).width;
-	var pxOffset = pxToOptimalStart + (pxOptimalLetter/2);
-	
+	var pxOffset = pxToOptimalStart + (pxOptimalLetter / 2);
+
 	//console.log('wordToOptimalStart ' + wordToOptimalStart);
 	//console.log('wordOptimalLetter ' + wordOptimalLetter);
 	//console.log("pxOptimalLetter " + pxOptimalLetter);
 	//console.log("pxToOptimalStart " + pxToOptimalStart);
 	//console.log("Word: " + textItem.text + " Optimal Letter: " + textItem.optimalletterposition + " Pixel Offset: " + pxOffset);
-	
+
 	return pxOffset;
 }
 
 // --------------------------------------------------
 // This function will add a static focal character at the optimal letter
 // position. This adds an extra character to the displayed word
-function addStaticFocalToTextItem(textItem, isRightToLeft) {	
-	var text = textItem.text;	
-	
+function addStaticFocalToTextItem(textItem, isRightToLeft) {
+	var text = textItem.text;
+
 	// focal character has already been set in reader.js at init()
 	if (isRightToLeft) {
 		var sub1 = text.substring(0, text.length - textItem.optimalletterposition);
@@ -1309,7 +1347,7 @@ function addStaticFocalToTextItem(textItem, isRightToLeft) {
 		var sub2 = text.substring(textItem.optimalletterposition, text.length);
 		textItem.optimalletterposition = textItem.optimalletterposition + 1;
 	}
-	
+
 	textItem.text = sub1 + focalCharacter + sub2;
 }
 
@@ -1321,10 +1359,10 @@ function getWord() {
 	playingText = false;
 	playSlideShow();
 	//displayWord(textArray[wordIndex]);
-	
+
 	if (isEmpty($('#word'))) {
 		textItemIndex = 1;
-  		displayWord(textArray[wordIndex]);
+		displayWord(textArray[wordIndex]);
 	}
 }
 
@@ -1340,33 +1378,33 @@ function getWord() {
 //		realWPMAllPauses;
 function setSlideShowData(textData) {
 	slideShowData = {};
-	
+
 	slideShowData.totalDuration = 0;
 	slideShowData.totalDurationIncPauses = 0;
 	slideShowData.totalSegments = textData.length;
 	slideShowData.minDuration = textData[0].duration;
 	slideShowData.maxDuration = textData[0].duration;
-	
+
 	for (var i = 0; i < textData.length; i++) {
 		var d = textData[i].duration;
 		var pd1 = textData[i].predelay;
 		var pd2 = textData[i].postdelay;
-    	if (d < slideShowData.minDuration) slideShowData.minDuration = d;
+		if (d < slideShowData.minDuration) slideShowData.minDuration = d;
 		if (d > slideShowData.maxDuration) slideShowData.maxDuration = d;
 		slideShowData.totalDuration = slideShowData.totalDuration + d;
 		slideShowData.totalDurationIncPauses = slideShowData.totalDurationIncPauses + d + pd1 + pd2;
 	}
-	
+
 	// Adjust the data for WPM adjustments
 	var totalAdjustedTiming = WPMTimingAdjustmentMS * textData.length;
 	slideShowData.totalDuration = slideShowData.totalDuration + totalAdjustedTiming;
 	slideShowData.totalDurationIncPauses = slideShowData.totalDurationIncPauses + totalAdjustedTiming;
-	
-	slideShowData.realWPM = (textData.length / (slideShowData.totalDuration/1000/60)).toFixed();
-	slideShowData.realWPMAllPauses = (textData.length / (slideShowData.totalDurationIncPauses/1000/60)).toFixed();
-	
+
+	slideShowData.realWPM = (textData.length / (slideShowData.totalDuration / 1000 / 60)).toFixed();
+	slideShowData.realWPMAllPauses = (textData.length / (slideShowData.totalDurationIncPauses / 1000 / 60)).toFixed();
+
 	slideShowData.avgDuration = slideShowData.totalDuration / slideShowData.totalSegments;
-	
+
 	//console.log('WPM: ' + WPM);
 	//console.log('WPM (Real): ' + slideShowData.realWPM);
 	//console.log('WPM (All): ' + slideShowData.realWPMAllPauses);
@@ -1376,7 +1414,7 @@ function setSlideShowData(textData) {
 // Calculate statistics to display to the user
 function displayStatistics(textData) {
 	// Set the slide show data
-	setSlideShowData(textData);	
+	setSlideShowData(textData);
 	// temp variable
 	var s = slideShowData;
 	// Add the statistics to the final HTML
@@ -1404,17 +1442,17 @@ function displayStatistics(textData) {
 // Return a string representing the minutes and seconds
 function getMinAndSecondsString(milliseconds) {
 	var ms = milliseconds.toFixed();
-	var minFull = (ms/1000)/60;
+	var minFull = (ms / 1000) / 60;
 	var minutes = Math.floor(minFull);
 	var seconds = ((minFull - minutes) * 60).toFixed();
-	
+
 	if (minutes <= 0 && seconds <= 0) return "less than 1 second";
 	else return "~" + minutes + "min " + seconds + "sec";
 }
 
 // --------------------------------------------------
 // Check the element for empty trimming for spaces
-function isEmpty( el ){
+function isEmpty(el) {
 	return !$.trim(el.innerHTML())
 }
 
@@ -1427,17 +1465,17 @@ function adjustWPM(adjustmentAmount) {
 	var newPadding = WPMAdjustedPadding + adjustmentAmount;
 	var newWPM = Math.max(30, WPM + newPadding);
 	if (newWPM == 30) newPadding = WPMAdjustedPadding;
-	
-	var origTiming = 60000/WPM;
-	var newTiming = 60000/newWPM;
+
+	var origTiming = 60000 / WPM;
+	var newTiming = 60000 / newWPM;
 	var newTimingAdjustment = newTiming - origTiming;
-	
+
 	//console.log('WPM Padding: ' + newPadding + ' | WPM: ' + newWPM + ' | Timing Adjustment: ' + newTimingAdjustment);
-	
+
 	WPMTimingAdjustmentMS = newTimingAdjustment;
 	WPMAdjustedPadding = newPadding;
 	WPMAdjusted = newWPM;
 
-	setSlideShowData(textArray);	
+	setSlideShowData(textArray);
 	displayStatusData();
 }

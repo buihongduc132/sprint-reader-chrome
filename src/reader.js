@@ -1,3 +1,4 @@
+const console = require('console');
 const { clipboard } = require('electron');
 
 //------------------------------------------------------------------------------
@@ -302,12 +303,18 @@ function setEventListeners() {
 		divMenuReset.addEventListener("click", textReset, false);
 
 		// play menu - step forward
+		divMenuStepForwardMore = document.getElementById('menuStepForwardMore');
+		divMenuStepForwardMore.addEventListener("click", function () { textStep(5); }, false);
+
 		divMenuStepForward = document.getElementById('menuStepForward');
 		divMenuStepForward.addEventListener("click", function () { textStep(1); }, false);
 
 		// play menu - step back
 		divMenuStepBack = document.getElementById('menuStepBack');
 		divMenuStepBack.addEventListener("click", function () { textStep(-1); }, false);
+
+		divMenuStepBackMore = document.getElementById('menuStepBackMore');
+		divMenuStepBackMore.addEventListener("click", function () { textStep(-5); }, false);
 
 		// play menu - load selected text
 		divMenuLoadSelection = document.getElementById('menuLoadSelection');
@@ -404,7 +411,7 @@ function centerWordInDiv() {
 
 	$("#trailing-words").css('height', wordContainerHeightPX);
 	$("#trailing-words").css('line-height', wordContainerHeightMinusOnePX);
-	$("#trailing-words").css('font-size', Math.floor(fontSize * 0.6));
+	$("#trailing-words").css('font-size', Math.floor(fontSize * trailingFontSizePercentage));
 
 	// Set the tab control height
 	var tabHeight = Math.round(window.innerHeight - 27) + "px";
@@ -487,6 +494,7 @@ function getSettingsDefault() {
 	textOrientationIsRightToLeft = 'false';
 	textOrientationAutoDetect = 'true';
 	showRemainingTime = 'false';
+	trailingFontSizePercentage = 0.6;
 }
 
 function getAdvancedSettingsDefault() {
@@ -520,6 +528,7 @@ function getSettings() {
 
 	// Font Size
 	fontSize = getFromLocalGreaterThanZero('fontSize', fontSize);
+	trailingFontSizePercentage = getFromLocalGreaterThanZero('trailingFontSizePercentage', trailingFontSizePercentage);
 
 	// Color Scheme
 	colorScheme = getFromLocalIsNumber('colorScheme', colorScheme);
@@ -625,6 +634,7 @@ function displaySettings() {
 	document.getElementById('chunk').value = chunkSize;
 	document.getElementById('color').value = colorScheme;
 	document.getElementById('fontsize').value = fontSize;
+	document.getElementById('trailing-fontsize-percentage').value = trailingFontSizePercentage;
 
 	if (autoStart == 'true') {
 		$('#autostart').prop('checked', 'true');
@@ -741,6 +751,7 @@ function saveSettings() {
 	var newWPM = document.getElementById('wpm').value;
 	var newChunkSize = document.getElementById('chunk').value;
 	var newFontSize = document.getElementById('fontsize').value;
+	var newTrailingFontSizePercentage = document.getElementById('trailing-fontsize-percentage').value;
 	var newColorScheme = document.getElementById('color').value;
 	var newFont = document.getElementById('fontselection').value;
 
@@ -754,6 +765,13 @@ function saveSettings() {
 	if (!isNaN(newFontSize)) {
 		localStorage.setItem("fontSize", newFontSize);
 		fontSize = newFontSize;
+	}
+
+	if (!isNaN(newTrailingFontSizePercentage)) {
+		localStorage.setItem("trailingFontSizePercentage", +newTrailingFontSizePercentage);
+		trailingFontSizePercentage = +newTrailingFontSizePercentage;
+	} else {
+		console.warn('newTrailingFontSizePercentage: Nan', newTrailingFontSizePercentage);
 	}
 
 	if (!isNaN(newChunkSize)) {
@@ -1335,12 +1353,14 @@ var counter;
 var seconds;
 
 function textPlayCountdown() {
+	displayWord(textArray[wordIndex]);
 	// divWord.innerHTML = Math.floor(seconds).toFixed(0);
 
 	// Create a dummy text item for the countdown
 	// var textItem = {};
 	// textItem.optimalletterposition = 1;
 	// textItem.text = Math.floor(seconds).toFixed(0);
+	let textItem = textArray[0];
 
 	var orient = 'left';
 	if (displayReaderRightToLeft) orient = 'right';
@@ -1352,21 +1372,21 @@ function textPlayCountdown() {
 	//    - Optimal positioning
 	//	  - Optimal positioning + static focal
 	if (textPosition == 2 || textPosition == 3) {
-		// var px = calculatePixelOffsetToOptimalCenter(textItem);
-		// var offset = leftPaddingBorderOptimised - px;
-		// $("#word-container").css('padding-' + orient, offset + "px");
-		// $("#word-container").css('margin-left', "0");
+		var px = calculatePixelOffsetToOptimalCenter(textItem);
+		var offset = leftPaddingBorderOptimised - px;
+		$("#word-container").css('padding-' + orient, offset + "px");
+		$("#word-container").css('margin-left', "0");
 	}
 	else {
-		$("#word-container").css('margin-left', "auto");
+		// $("#word-container").css('margin-left', "auto");
 	}
 
 	// Highlighting of the countdown letter
-	// highlightTheOptimalLetter(textItem);
+	highlightTheOptimalLetter(textItem);
 
 	// Display the correct slide/duration
 	seconds = seconds - 0.1;
-	if (seconds == -0) {
+	if (seconds == 0) {
 		wordIndex = 0;
 		displayWord(textArray[wordIndex]);
 		displayTrailingWords(wordIndex - 1, 4);
@@ -1378,7 +1398,7 @@ function textPlayCountdown() {
 		clearInterval(counter);
 		stopSlideShow = true;
 		playingText = false;
-		wordIndex = 1;
+		wordIndex = 0;
 		textPlay();
 	}
 }
@@ -1534,7 +1554,6 @@ function getWordIndexByStep(step) {
 }
 
 function bindKeys(k) {
-	//console.log(k.keyCode);
 	// KeyCode 32 = Space Bar
 	if (k.keyCode == 32) {
 		// We fire a button click event which will in turn fire
@@ -1549,6 +1568,14 @@ function bindKeys(k) {
 	else if (k.keyCode == 97) {
 		textStep(-1);
 	}
+	// // KeyCode 65 = S key
+	// else if (k.keyCode == 65) {
+	// 	textStep(-5);
+	// }
+	// // KeyCode 83 = A key
+	// else if (k.keyCode == 83) {
+	// 	textStep(5);
+	// }
 	// KeyCode 115 = S key
 	else if (k.keyCode == 115) {
 		textStep(1);

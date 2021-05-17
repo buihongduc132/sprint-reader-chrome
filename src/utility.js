@@ -158,7 +158,7 @@ function displayVersion() {
 function getFromLocalGreaterThanZero(key, variable) {
 	if (localStorage.getItem(key) > 0) {
 		variable = localStorage.getItem(key);
-		variable = parseInt(variable);
+		variable = parseFloat(variable);
 	}
 	return variable;
 }

@@ -14,11 +14,17 @@ const { keyTap } = require('robotjs')
 const getSelectedText = async () => {
   const currentClipboardContent = clipboard.readText(); // preserve clipboard content
   clipboard.clear();
-  keyTap("c", process.platform === "darwin" ? "command" : "control");
-  await new Promise((resolve) => setTimeout(resolve, 500)); // add a delay before checking clipboard
-  const selectedText = clipboard.readText();
-  clipboard.writeText(currentClipboardContent);
-  return selectedText;
+  try {
+    keyTap("c", process.platform === "darwin" ? "command" : "control");
+    const selectedText = clipboard.readText();
+    await new Promise((resolve) => setTimeout(resolve, 500)); // add a delay before checking clipboard
+    clipboard.writeText(currentClipboardContent);
+    return selectedText;
+  } catch(err) {
+    console.warn('Get selected text error', err);
+    clipboard.writeText(currentClipboardContent);
+    return '';
+  }
 };
 
 let _window;
@@ -121,11 +127,15 @@ app.whenReady().then(() => {
 
   globalShortcut.register('CommandOrControl+Shift+R', async () => {
     const selectedText = await getSelectedText();
-    await window.webContents
-      .executeJavaScript(`localStorage.setItem("selectedText", \`${selectedText.toString()}\`); wordIndex = 0; textReset();`, true);
 
-    // window.reload();
-    window.show();
+    if(selectedText && selectedText.length) {
+      await window.webContents
+      .executeJavaScript(`localStorage.setItem("selectedText", \`${selectedText.toString()}\`); wordIndex = 0; textReset();`, true);
+      
+      // window.reload();
+      window.show();
+    }
+
   })
 
   // globalShortcut.register('CommandOrControl+Shift+R', async () => {
